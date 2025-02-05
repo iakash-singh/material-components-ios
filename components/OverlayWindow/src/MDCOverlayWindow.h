@@ -35,6 +35,18 @@
 - (void)activateOverlay:(UIView *)overlay withLevel:(UIWindowLevel)level;
 
 /**
+ Notifies the window that the given overlay view should be shown at the bottom of the given level.
+ This overlay will get added underneath all other overlays with the given UIWindowLevel.
+
+ Overlay owners must call this method to ensure that the overlay is actually displayed over the
+ window's primary content.
+
+ @param overlay The overlay being displayed.
+ @param level The UIWindowLevel to display the overlay on.
+ */
+- (void)activateOverlay:(UIView *)overlay atBottomOfLevel:(UIWindowLevel)level;
+
+/**
  Notifies the window that the given overlay is no longer active.
 
  Overlay owners should still hide their overlay before calling this method.
