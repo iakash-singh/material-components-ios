@@ -21,6 +21,7 @@ API_DEPRECATED_BEGIN("🤖👀 Use layer.cornerRadius to achieve rounded corners
 /**
  A protocol for objects that create closed CGPaths of varying sizes.
  */
+NS_SWIFT_UI_ACTOR
 @protocol MDCShapeGenerating <NSCopying>
 
 /**
