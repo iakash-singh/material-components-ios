@@ -1,11 +1,14 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "M3CButtonSize.h"
 
 NS_ASSUME_NONNULL_BEGIN
 @class MDCShadow;
 
 __attribute__((objc_subclassing_restricted))
 @interface M3CButton : UIButton
+
+- (void)setButtonSize:(M3CButtonSize)buttonSize API_AVAILABLE(ios(15.0));
 
 /**
  A color used as the button's @c backgroundColor.

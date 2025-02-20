@@ -15,7 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, UIColor *> *_borderColors;
   NSMutableDictionary<NSNumber *, MDCShadow *> *_shadows;
   BOOL _customInsetAvailable;
+  BOOL _buttonSizeSet;
 }
+
+@property(nonatomic, assign) M3CButtonSize buttonSize API_AVAILABLE(ios(15.0));
 
 // Used only when layoutTitleWithConstraints is enabled.
 @property(nonatomic, strong, nullable) NSLayoutConstraint *titleTopConstraint;
@@ -80,6 +83,11 @@ NS_ASSUME_NONNULL_BEGIN
   self.exclusiveTouch = YES;
 #endif
   [self updateColors];
+}
+
+- (void)setButtonSize:(M3CButtonSize)buttonSize {
+  _buttonSizeSet = YES;
+  _buttonSize = buttonSize;
 }
 
 // Colors
