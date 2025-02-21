@@ -48,6 +48,16 @@ __attribute__((objc_subclassing_restricted))
 - (void)setShadow:(nullable MDCShadow *)shadow forState:(UIControlState)state;
 
 /**
+ Sets the font for a particular size.
+
+ @note This font is applied to both the label and icon.
+
+ @param font The font to be applied to the button.
+ @param size The size of the button.
+ */
+- (void)setFont:(UIFont *)font forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+
+/**
  The preferred imageEdgeInsets for a button with an image and title.
 */
 @property(nonatomic) UIEdgeInsets imageEdgeInsetsWithImageAndTitle;

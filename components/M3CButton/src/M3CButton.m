@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, UIColor *> *_tintColors;
   NSMutableDictionary<NSNumber *, UIColor *> *_borderColors;
   NSMutableDictionary<NSNumber *, MDCShadow *> *_shadows;
+  NSMutableDictionary<NSNumber *, UIFont *> *_fonts;
   BOOL _customInsetAvailable;
   BOOL _buttonSizeSet;
 }
@@ -66,6 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
   self.minimumWidth = 44.0f;
   _borderColors = [NSMutableDictionary dictionary];
   _shadows = [NSMutableDictionary dictionary];
+  _fonts = [NSMutableDictionary dictionary];
   _customInsetAvailable = NO;
 
   if (!_backgroundColors) {
@@ -110,6 +112,19 @@ NS_ASSUME_NONNULL_BEGIN
   _shadows[@(state)] = shadow;
   [self updateColors];
   [self updateShadows];
+}
+
+- (void)setFont:(UIFont *)font forSize:(M3CButtonSize)size {
+  _fonts[@(size)] = font;
+
+  UIFont *currentFont = _fonts[@(self.buttonSize)];
+
+  if (_buttonSizeSet && !(currentFont == nil)) {
+    self.titleLabel.font = currentFont;
+    [self setPreferredSymbolConfiguration:[UIImageSymbolConfiguration
+                                              configurationWithFont:currentFont]
+                          forImageInState:UIControlStateNormal];
+  }
 }
 
 - (void)setMinimumHeight:(CGFloat)minimumHeight {
