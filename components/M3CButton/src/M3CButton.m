@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, UIColor *> *_borderColors;
   NSMutableDictionary<NSNumber *, MDCShadow *> *_shadows;
   NSMutableDictionary<NSNumber *, UIFont *> *_fonts;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_cornerRadius;
   BOOL _customInsetAvailable;
   BOOL _buttonSizeSet;
 }
@@ -68,6 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
   _borderColors = [NSMutableDictionary dictionary];
   _shadows = [NSMutableDictionary dictionary];
   _fonts = [NSMutableDictionary dictionary];
+  _cornerRadius = [NSMutableDictionary dictionary];
   _customInsetAvailable = NO;
 
   if (!_backgroundColors) {
@@ -124,6 +126,18 @@ NS_ASSUME_NONNULL_BEGIN
     [self setPreferredSymbolConfiguration:[UIImageSymbolConfiguration
                                               configurationWithFont:currentFont]
                           forImageInState:UIControlStateNormal];
+  }
+}
+
+- (void)setCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size {
+  NSNumber *cornerRadiusValue = [NSNumber numberWithFloat:cornerRadius];
+  _cornerRadius[@(size)] = cornerRadiusValue;
+
+  NSNumber *currentCornerRadius = _cornerRadius[@(self.buttonSize)] ?: cornerRadiusValue;
+
+  if (_buttonSizeSet && !(currentCornerRadius == nil)) {
+    self.layer.cornerRadius = [currentCornerRadius floatValue];
+    self.layer.cornerCurve = kCACornerCurveCircular;
   }
 }
 

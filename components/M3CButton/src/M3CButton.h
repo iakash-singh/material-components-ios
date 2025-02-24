@@ -58,6 +58,14 @@ __attribute__((objc_subclassing_restricted))
 - (void)setFont:(UIFont *)font forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
 
 /**
+ Sets the corner radius for a particular size.
+
+ @param cornerRadius The corner radius to be applied to the button.
+ @param size The size of the button.
+ */
+- (void)setCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+
+/**
  The preferred imageEdgeInsets for a button with an image and title.
 */
 @property(nonatomic) UIEdgeInsets imageEdgeInsetsWithImageAndTitle;
