@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, MDCShadow *> *_shadows;
   NSMutableDictionary<NSNumber *, UIFont *> *_fonts;
   NSMutableDictionary<NSNumber *, NSNumber *> *_cornerRadius;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_pressedCornerRadius;
   BOOL _customInsetAvailable;
   BOOL _buttonSizeSet;
 }
@@ -70,6 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
   _shadows = [NSMutableDictionary dictionary];
   _fonts = [NSMutableDictionary dictionary];
   _cornerRadius = [NSMutableDictionary dictionary];
+  _pressedCornerRadius = [NSMutableDictionary dictionary];
   _customInsetAvailable = NO;
 
   if (!_backgroundColors) {
@@ -139,6 +141,10 @@ NS_ASSUME_NONNULL_BEGIN
     self.layer.cornerRadius = [currentCornerRadius floatValue];
     self.layer.cornerCurve = kCACornerCurveCircular;
   }
+}
+
+- (void)setPressedCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size {
+  _pressedCornerRadius[@(size)] = [NSNumber numberWithFloat:cornerRadius];
 }
 
 - (void)setMinimumHeight:(CGFloat)minimumHeight {
@@ -220,6 +226,21 @@ NS_ASSUME_NONNULL_BEGIN
   MDCConfigureShadowForView(self, shadow);
 }
 
+- (void)updateCorners {
+  // Default to the existing corner radius.
+  NSNumber *currentCornerRadius = [NSNumber numberWithFloat:self.layer.cornerRadius];
+  if (@available(iOS 15.0, *)) {
+    if (self.isHighlighted) {
+      currentCornerRadius = _pressedCornerRadius[@(self.buttonSize)];
+    } else {
+      currentCornerRadius = _cornerRadius[@(self.buttonSize)];
+    }
+  }
+
+  self.layer.cornerRadius = [currentCornerRadius floatValue];
+  self.layer.cornerCurve = kCACornerCurveCircular;
+}
+
 - (void)setImageEdgeInsetsWithImageAndTitle:(UIEdgeInsets)imageEdgeInsetsWithImageAndTitle {
   _imageEdgeInsetsWithImageAndTitle = imageEdgeInsetsWithImageAndTitle;
   _customInsetAvailable = NO;
@@ -296,6 +317,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setHighlighted:(BOOL)highlighted {
   BOOL animated = highlighted ? NO : YES;
+  if (@available(iOS 15.0, *)) {
+    if (_buttonSizeSet && _pressedCornerRadius[@(self.buttonSize)] != nil) {
+      // If there is a custom value present for the pressed state animate into and out of the new
+      // corner radius.
+      animated = YES;
+    }
+  }
   [self setHighlighted:highlighted animated:animated];
 }
 
@@ -303,6 +331,11 @@ NS_ASSUME_NONNULL_BEGIN
   [super setHighlighted:highlighted];
   void (^animations)(void) = ^{
     [self updateColors];
+    if (@available(iOS 15.0, *)) {
+      if (_buttonSizeSet) {
+        [self updateCorners];
+      }
+    }
   };
 
   if (animated) {
