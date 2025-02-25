@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, UIFont *> *_fonts;
   NSMutableDictionary<NSNumber *, NSNumber *> *_cornerRadius;
   NSMutableDictionary<NSNumber *, NSNumber *> *_pressedCornerRadius;
+  NSMutableDictionary<NSNumber *, NSValue *> *_imageEdgeInsetsForSize;
   BOOL _customInsetAvailable;
   BOOL _buttonSizeSet;
 }
@@ -145,6 +146,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setPressedCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size {
   _pressedCornerRadius[@(size)] = [NSNumber numberWithFloat:cornerRadius];
+}
+
+- (void)setImageEdgeInsets:(UIEdgeInsets)imageEdgeInsets forSize:(M3CButtonSize)size {
+  _customInsetAvailable = NO;
+
+  _imageEdgeInsetsForSize[@(size)] = [NSValue valueWithUIEdgeInsets:imageEdgeInsets];
+  [self updateInsets];
 }
 
 - (void)setMinimumHeight:(CGFloat)minimumHeight {
@@ -285,7 +293,15 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL hasImage = self.currentImage.size.width > 0;
     if (hasImage && hasTitle) {
       self.contentEdgeInsets = self.edgeInsetsWithImageAndTitle;
-      self.imageEdgeInsets = self.imageEdgeInsetsWithImageAndTitle;
+      if (@available(iOS 15.0, *)) {
+        if (_buttonSizeSet) {
+          self.imageEdgeInsets = [_imageEdgeInsetsForSize[@(self.buttonSize)] UIEdgeInsetsValue];
+        } else {
+          self.imageEdgeInsets = self.imageEdgeInsetsWithImageAndTitle;
+        }
+      } else {
+        self.imageEdgeInsets = self.imageEdgeInsetsWithImageAndTitle;
+      }
     } else if (hasImage) {
       self.contentEdgeInsets = self.edgeInsetsWithImageOnly;
       // Please add an imageEdgeInsetsWithImageOnly to specify a non zero value.
