@@ -122,7 +122,7 @@ NS_ASSUME_NONNULL_BEGIN
   [self updateShadows];
 }
 
-- (void)setFont:(UIFont *)font forSize:(M3CButtonSize)size {
+- (void)setFont:(UIFont *)font forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _fonts[@(size)] = font;
 
   UIFont *currentFont = _fonts[@(self.buttonSize)];
@@ -135,7 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
   }
 }
 
-- (void)setCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size {
+- (void)setCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   NSNumber *cornerRadiusValue = [NSNumber numberWithFloat:cornerRadius];
   _cornerRadius[@(size)] = cornerRadiusValue;
 
@@ -147,11 +147,13 @@ NS_ASSUME_NONNULL_BEGIN
   }
 }
 
-- (void)setPressedCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size {
+- (void)setPressedCornerRadius:(CGFloat)cornerRadius
+                       forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _pressedCornerRadius[@(size)] = [NSNumber numberWithFloat:cornerRadius];
 }
 
-- (void)setImageEdgeInsets:(UIEdgeInsets)imageEdgeInsets forSize:(M3CButtonSize)size {
+- (void)setImageEdgeInsets:(UIEdgeInsets)imageEdgeInsets
+                   forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _customInsetAvailable = NO;
 
   _imageEdgeInsetsForSize[@(size)] = [NSValue valueWithUIEdgeInsets:imageEdgeInsets];
