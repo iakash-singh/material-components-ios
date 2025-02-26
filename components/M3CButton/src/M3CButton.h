@@ -84,6 +84,35 @@ __attribute__((objc_subclassing_restricted))
                    forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
 
 /**
+ Sets the @c edgeInsetsWithImageAndTitle for a particular size.
+
+ @param edgeInsetsWithImageAndTitle The preferred @c imageEdgeInsets for a button with an image and
+ title.
+ @param size The size at which the @c imageEdgeInsets will be used for.
+ */
+- (void)setEdgeInsetsWithImageAndTitle:(UIEdgeInsets)edgeInsetsWithImageAndTitle
+                               forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+
+/**
+ Sets the @c imageEdgeInsetsWithImage for a particular size.
+
+ @param edgeInsetsWithImage The preferred @c imageEdgeInsets for a button with an image and
+ title.
+ @param size The size at which the @c imageEdgeInsets will be used for.
+ */
+- (void)setEdgeInsetsWithImage:(UIEdgeInsets)edgeInsetsWithImage
+                       forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+
+/**
+ Sets the @c edgeInsetsWithTitle for a particular size.
+
+ @param edgeInsetsWithTitle The preferred @c imageEdgeInsets for a button with an image and title.
+ @param size The size at which the @c imageEdgeInsets will be used for.
+ */
+- (void)setEdgeInsetsWithTitle:(UIEdgeInsets)edgeInsetsWithTitle
+                       forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+
+/**
  The preferred imageEdgeInsets for a button with an image and title.
 */
 @property(nonatomic) UIEdgeInsets imageEdgeInsetsWithImageAndTitle;

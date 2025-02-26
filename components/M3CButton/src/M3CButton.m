@@ -18,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, NSNumber *> *_cornerRadius;
   NSMutableDictionary<NSNumber *, NSNumber *> *_pressedCornerRadius;
   NSMutableDictionary<NSNumber *, NSValue *> *_imageEdgeInsetsForSize;
+  NSMutableDictionary<NSNumber *, NSValue *> *_edgeInsetsWithImageAndTitleForSize;
+  NSMutableDictionary<NSNumber *, NSValue *> *_edgeInsetsWithImageForSize;
+  NSMutableDictionary<NSNumber *, NSValue *> *_edgeInsetsWithTitleForSize;
   BOOL _customInsetAvailable;
   BOOL _buttonSizeSet;
 }
@@ -234,6 +237,38 @@ NS_ASSUME_NONNULL_BEGIN
   MDCConfigureShadowForView(self, shadow);
 }
 
+- (void)setImageEdgeInsetsWithImageAndTitle:(UIEdgeInsets)imageEdgeInsetsWithImageAndTitle
+                                    forSize:(M3CButtonSize)size {
+  _customInsetAvailable = NO;
+
+  _imageEdgeInsetsForSize[@(size)] =
+      [NSValue valueWithUIEdgeInsets:imageEdgeInsetsWithImageAndTitle];
+  [self updateInsets];
+}
+
+- (void)setEdgeInsetsWithImageAndTitle:(UIEdgeInsets)edgeInsetsWithImageAndTitle
+                               forSize:(M3CButtonSize)size {
+  _customInsetAvailable = NO;
+
+  _edgeInsetsWithImageAndTitleForSize[@(size)] =
+      [NSValue valueWithUIEdgeInsets:edgeInsetsWithImageAndTitle];
+  [self updateInsets];
+}
+
+- (void)setEdgeInsetsWithImage:(UIEdgeInsets)edgeInsetsWithImage forSize:(M3CButtonSize)size {
+  _customInsetAvailable = NO;
+
+  _edgeInsetsWithImageForSize[@(size)] = [NSValue valueWithUIEdgeInsets:edgeInsetsWithImage];
+  [self updateInsets];
+}
+
+- (void)setEdgeInsetsWithTitle:(UIEdgeInsets)edgeInsetsWithTitle forSize:(M3CButtonSize)size {
+  _customInsetAvailable = NO;
+
+  _edgeInsetsWithTitleForSize[@(size)] = [NSValue valueWithUIEdgeInsets:edgeInsetsWithTitle];
+  [self updateInsets];
+}
+
 - (void)updateCorners {
   // Default to the existing corner radius.
   NSNumber *currentCornerRadius = [NSNumber numberWithFloat:self.layer.cornerRadius];
@@ -292,24 +327,53 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL hasTitle = self.currentTitle.length > 0 || self.currentAttributedTitle.length > 0;
     BOOL hasImage = self.currentImage.size.width > 0;
     if (hasImage && hasTitle) {
-      self.contentEdgeInsets = self.edgeInsetsWithImageAndTitle;
       if (@available(iOS 15.0, *)) {
         if (_buttonSizeSet) {
+          self.contentEdgeInsets =
+              [_edgeInsetsWithImageAndTitleForSize[@(self.buttonSize)] UIEdgeInsetsValue];
           self.imageEdgeInsets = [_imageEdgeInsetsForSize[@(self.buttonSize)] UIEdgeInsetsValue];
         } else {
+          self.contentEdgeInsets = self.edgeInsetsWithImageAndTitle;
           self.imageEdgeInsets = self.imageEdgeInsetsWithImageAndTitle;
         }
       } else {
+        self.contentEdgeInsets = self.edgeInsetsWithImageAndTitle;
         self.imageEdgeInsets = self.imageEdgeInsetsWithImageAndTitle;
       }
     } else if (hasImage) {
-      self.contentEdgeInsets = self.edgeInsetsWithImageOnly;
-      // Please add an imageEdgeInsetsWithImageOnly to specify a non zero value.
-      self.imageEdgeInsets = UIEdgeInsetsZero;
+      if (@available(iOS 15.0, *)) {
+        if (_buttonSizeSet) {
+          self.contentEdgeInsets =
+              [_edgeInsetsWithImageForSize[@(self.buttonSize)] UIEdgeInsetsValue];
+          // Please add an imageEdgeInsetsWithImageOnly to specify a non zero value.
+          self.imageEdgeInsets = UIEdgeInsetsZero;
+        } else {
+          self.contentEdgeInsets = self.edgeInsetsWithImageOnly;
+          // Please add an imageEdgeInsetsWithImageOnly to specify a non zero value.
+          self.imageEdgeInsets = UIEdgeInsetsZero;
+        }
+      } else {
+        self.contentEdgeInsets = self.edgeInsetsWithImageOnly;
+        // Please add an imageEdgeInsetsWithImageOnly to specify a non zero value.
+        self.imageEdgeInsets = UIEdgeInsetsZero;
+      }
     } else if (hasTitle) {
-      self.contentEdgeInsets = self.edgeInsetsWithTitleOnly;
-      // Please add an imageEdgeInsetsWithTitleOnly to specify a non zero value.
-      self.imageEdgeInsets = UIEdgeInsetsZero;
+      if (@available(iOS 15.0, *)) {
+        if (_buttonSizeSet) {
+          self.contentEdgeInsets =
+              [_edgeInsetsWithTitleForSize[@(self.buttonSize)] UIEdgeInsetsValue];
+          // Please add an imageEdgeInsetsWithTitleOnly to specify a non zero value.
+          self.imageEdgeInsets = UIEdgeInsetsZero;
+        } else {
+          self.contentEdgeInsets = self.edgeInsetsWithTitleOnly;
+          // Please add an imageEdgeInsetsWithTitleOnly to specify a non zero value.
+          self.imageEdgeInsets = UIEdgeInsetsZero;
+        }
+      } else {
+        self.contentEdgeInsets = self.edgeInsetsWithTitleOnly;
+        // Please add an imageEdgeInsetsWithTitleOnly to specify a non zero value.
+        self.imageEdgeInsets = UIEdgeInsetsZero;
+      }
     }
     _customInsetAvailable = NO;
   }
