@@ -3,6 +3,7 @@
 #import <UIKit/UIKit.h>
 
 #import "M3CButton.h"
+#import "M3CButtonSize.h"
 #import "M3CAnimationActions.h"
 #import "MDCShadow.h"
 #import "MDCShadowsCollection.h"
@@ -15,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, UIColor *> *_borderColors;
   NSMutableDictionary<NSNumber *, MDCShadow *> *_shadows;
   NSMutableDictionary<NSNumber *, UIFont *> *_fonts;
+  NSMutableDictionary<NSNumber *, UIFont *> *_symbolFonts;
   NSMutableDictionary<NSNumber *, NSNumber *> *_cornerRadius;
   NSMutableDictionary<NSNumber *, NSNumber *> *_pressedCornerRadius;
   NSMutableDictionary<NSNumber *, NSValue *> *_imageEdgeInsetsForSize;
@@ -74,6 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
   _borderColors = [NSMutableDictionary dictionary];
   _shadows = [NSMutableDictionary dictionary];
   _fonts = [NSMutableDictionary dictionary];
+  _symbolFonts = [NSMutableDictionary dictionary];
   _cornerRadius = [NSMutableDictionary dictionary];
   _pressedCornerRadius = [NSMutableDictionary dictionary];
   _imageEdgeInsetsForSize = [NSMutableDictionary dictionary];
@@ -133,6 +136,12 @@ NS_ASSUME_NONNULL_BEGIN
   _fonts[@(size)] = font;
 
   [self updateFont];
+}
+
+- (void)setSymbolFont:(UIFont *)font forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
+  _symbolFonts[@(size)] = font;
+
+  [self updateSymbolFont];
 }
 
 - (void)setCornerRadius:(CGFloat)cornerRadius forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
@@ -226,13 +235,23 @@ NS_ASSUME_NONNULL_BEGIN
     currentFont = _fonts[@(self.buttonSize)];
     if (_buttonSizeSet && !(currentFont == nil)) {
       self.titleLabel.font = currentFont;
+    }
+  }
+
+  self.titleLabel.font = currentFont;
+}
+
+- (void)updateSymbolFont {
+  UIFont *currentFont = nil;
+
+  if (@available(iOS 15.0, *)) {
+    currentFont = _symbolFonts[@(self.buttonSize)];
+    if (_buttonSizeSet && !(currentFont == nil)) {
       [self setPreferredSymbolConfiguration:[UIImageSymbolConfiguration
                                                 configurationWithFont:currentFont]
                             forImageInState:UIControlStateNormal];
     }
   }
-
-  self.titleLabel.font = currentFont;
 }
 
 - (void)updateCGColors {

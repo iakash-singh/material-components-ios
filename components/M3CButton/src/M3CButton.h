@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "M3CButtonSize.h"
+
+typedef NS_ENUM(NSInteger, M3CButtonSize);
 
 NS_ASSUME_NONNULL_BEGIN
 @class MDCShadow;
@@ -50,12 +51,26 @@ __attribute__((objc_subclassing_restricted))
 /**
  Sets the font for a particular size.
 
- @note This font is applied to both the label and icon.
+ @note This font is applied to the label.
+
+ @seealso @c setSymbolFont:forSize:
 
  @param font The font to be applied to the button.
  @param size The size of the button.
  */
 - (void)setFont:(UIFont *)font forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+
+/**
+ Sets the font for a particular size.
+
+ @note This font is applied to the icon.
+
+ @seealso @c setFont:forSize:
+
+ @param symbolFont The font to be applied to the button.
+ @param size The size of the button.
+ */
+- (void)setSymbolFont:(UIFont *)symbolFont forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
 
 /**
  Sets the corner radius for a particular size.
