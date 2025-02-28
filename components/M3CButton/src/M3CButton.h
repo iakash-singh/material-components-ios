@@ -9,6 +9,15 @@ NS_ASSUME_NONNULL_BEGIN
 __attribute__((objc_subclassing_restricted))
 @interface M3CButton : UIButton
 
+/**
+Sets the button's size.
+
+This method allows you to specify the size of the button using the M3CButtonSize enum.
+The size affects various aspects of the button's appearance, including font, corner radius,
+and edge insets. This method is available in iOS 15.0 and later.
+
+@param buttonSize The desired button size, specified using the M3CButtonSize enum.
+*/
 - (void)setButtonSize:(M3CButtonSize)buttonSize API_AVAILABLE(ios(15.0));
 
 /**
