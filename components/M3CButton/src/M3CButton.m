@@ -107,6 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
 
   [self updateInsets];
   [self updateFont];
+  [self updateSymbolFont];
 }
 
 // Colors
