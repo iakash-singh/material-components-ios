@@ -3,7 +3,6 @@
 #import <UIKit/UIKit.h>
 
 #import "M3CButton.h"
-#import "M3CButtonSize.h"
 #import "M3CAnimationActions.h"
 #import "MDCShadow.h"
 #import "MDCShadowsCollection.h"
@@ -275,7 +274,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)setImageEdgeInsetsWithImageAndTitle:(UIEdgeInsets)imageEdgeInsetsWithImageAndTitle
-                                    forSize:(M3CButtonSize)size {
+                                    forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _customInsetAvailable = NO;
 
   _imageEdgeInsetsForSize[@(size)] =
@@ -284,7 +283,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)setEdgeInsetsWithImageAndTitle:(UIEdgeInsets)edgeInsetsWithImageAndTitle
-                               forSize:(M3CButtonSize)size {
+                               forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _customInsetAvailable = NO;
 
   _edgeInsetsWithImageAndTitleForSize[@(size)] =
@@ -292,14 +291,16 @@ NS_ASSUME_NONNULL_BEGIN
   [self updateInsets];
 }
 
-- (void)setEdgeInsetsWithImage:(UIEdgeInsets)edgeInsetsWithImage forSize:(M3CButtonSize)size {
+- (void)setEdgeInsetsWithImage:(UIEdgeInsets)edgeInsetsWithImage
+                       forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _customInsetAvailable = NO;
 
   _edgeInsetsWithImageForSize[@(size)] = [NSValue valueWithUIEdgeInsets:edgeInsetsWithImage];
   [self updateInsets];
 }
 
-- (void)setEdgeInsetsWithTitle:(UIEdgeInsets)edgeInsetsWithTitle forSize:(M3CButtonSize)size {
+- (void)setEdgeInsetsWithTitle:(UIEdgeInsets)edgeInsetsWithTitle
+                       forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
   _customInsetAvailable = NO;
 
   _edgeInsetsWithTitleForSize[@(size)] = [NSValue valueWithUIEdgeInsets:edgeInsetsWithTitle];
