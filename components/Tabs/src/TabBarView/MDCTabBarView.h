@@ -245,7 +245,19 @@ __attribute__((objc_subclassing_restricted)) @interface MDCTabBarView : UIScroll
  */
 @property(nonatomic, assign) CGFloat minItemWidth;
 
-/** The edge insets between for each item in the tab bar view. Defaults to:
+/**
+ * The minimum height for each item in the tab bar view when both a title and an image are present.
+ * Defaults to 72.
+ */
+@property(nonatomic, assign) CGFloat minItemHeightTitleAndImage;
+
+/**
+ * The padding between the item title and image. Defaults to 3.
+ */
+@property(nonatomic, assign) CGFloat itemImageTitlePadding;
+
+/**
+ * The edge insets for each item in the tab bar view. Defaults to:
  * {.top = 8, .right = 16, .bottom = 8, .left = 16} for text only,
  * {.top = 12, .right = 16, .bottom = 12, .left = 16} for image only, and
  * {.top = 12, .right = 16, .bottom = 12, .left = 16} for text and image. Setting this property
@@ -254,6 +266,27 @@ __attribute__((objc_subclassing_restricted)) @interface MDCTabBarView : UIScroll
  * conform to @c MDCTabBarItemCustomViewing.
  */
 @property(nonatomic) UIEdgeInsets itemViewContentInsets;
+
+/**
+ * The edge insets for each item in the tab bar view when only text is present. Defaults to:
+ * {.top = 8, .right = 16, .bottom = 8, .left = 16}. Setting this property overrides the default
+ * value for text-only item edge insets.
+ */
+@property(nonatomic) UIEdgeInsets itemViewContentInsetsTextOnly;
+
+/**
+ * The edge insets for each item in the tab bar view when only an image is present.
+ * Defaults to: {.top = 12, .right = 16, .bottom = 12, .left = 16}. Setting this property overrides
+ * the default value for image-only item edge insets.
+ */
+@property(nonatomic) UIEdgeInsets itemViewContentInsetsImageOnly;
+
+/**
+ * The edge insets for each item in the tab bar view when both text and an image are
+ * present. Defaults to: {.top = 12, .right = 16, .bottom = 12, .left = 16}. Setting this property
+ * overrides the default value for text-and-image item edge insets.
+ */
+@property(nonatomic) UIEdgeInsets itemViewContentInsetsTextAndImage;
 
 /**
  Returns the @c UIAccessibility element associated with the provided item.

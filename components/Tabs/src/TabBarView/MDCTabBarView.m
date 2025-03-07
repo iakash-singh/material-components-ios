@@ -70,6 +70,12 @@ static const NSTimeInterval kSelectionChangeAnimationDuration = 0.3;
 /** The font size of the badge text. */
 static const CGFloat kBadgeFontSize = 8;
 
+/** The minimum height of any item view with both a title and image. */
+static const CGFloat kMinItemHeightTitleAndImage = 72;
+
+/** The vertical padding between the image view and the title label. */
+static const CGFloat kItemImageTitlePadding = 3;
+
 static NSString *const kSelectedImageKeyPath = @"selectedImage";
 static NSString *const kImageKeyPath = @"image";
 static NSString *const kTitleKeyPath = @"title";
@@ -123,7 +129,7 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 @property(nonnull, nonatomic, strong)
     NSMutableDictionary<NSNumber *, NSValue *> *layoutStyleToContentPadding;
 
-@property(nonatomic) BOOL useDefaultItemViewContentInsets;
+@property(nonatomic) BOOL useIndividualItemViewContentInsets;
 
 #if defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
 /**
@@ -172,7 +178,7 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   _layoutStyleToContentPadding[@(MDCTabBarViewLayoutStyleScrollable)] =
       [NSValue valueWithUIEdgeInsets:UIEdgeInsetsMake(0, kScrollableTabsLeadingEdgeInset, 0, 0)];
   _minItemWidth = kDefaultMinItemWidth;
-  _useDefaultItemViewContentInsets = YES;
+  _useIndividualItemViewContentInsets = YES;
   self.backgroundColor = UIColor.whiteColor;
   self.showsHorizontalScrollIndicator = NO;
 
@@ -180,6 +186,11 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   _itemBadgeAppearance.textColor = UIColor.whiteColor;
   _itemBadgeAppearance.font = [UIFont systemFontOfSize:kBadgeFontSize];
   _itemIconSize = CGSizeZero;
+  _itemImageTitlePadding = kItemImageTitlePadding;
+  _itemViewContentInsetsTextOnly = kDefaultItemViewContentInsetsTextOnly;
+  _itemViewContentInsetsImageOnly = kDefaultItemViewContentInsetsImageOnly;
+  _itemViewContentInsetsTextAndImage = kDefaultItemViewContentInsetsTextAndImage;
+  _minItemHeightTitleAndImage = kMinItemHeightTitleAndImage;
   _selectionIndicatorView = [[MDCTabBarViewIndicatorView alloc] init];
   _selectionIndicatorView.translatesAutoresizingMaskIntoConstraints = NO;
   _selectionIndicatorView.userInteractionEnabled = NO;
@@ -266,7 +277,37 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
 - (void)setItemViewContentInsets:(UIEdgeInsets)itemViewContentInsets {
   _itemViewContentInsets = itemViewContentInsets;
-  _useDefaultItemViewContentInsets = NO;
+  _useIndividualItemViewContentInsets = NO;
+}
+
+- (void)setItemViewContentInsetsTextOnly:(UIEdgeInsets)itemViewContentInsetsTextOnly {
+  _itemViewContentInsetsTextOnly = itemViewContentInsetsTextOnly;
+}
+
+- (void)setItemViewContentInsetsImageOnly:(UIEdgeInsets)itemViewContentInsetsImageOnly {
+  _itemViewContentInsetsImageOnly = itemViewContentInsetsImageOnly;
+}
+
+- (void)setItemViewContentInsetsTextAndImage:(UIEdgeInsets)itemViewContentInsetsTextAndImage {
+  _itemViewContentInsetsTextAndImage = itemViewContentInsetsTextAndImage;
+}
+
+- (void)setMinItemHeightTitleAndImage:(CGFloat)minItemHeightTitleAndImage {
+  _minItemHeightTitleAndImage = minItemHeightTitleAndImage;
+  for (UIView *itemView in self.itemViews) {
+    if ([itemView isKindOfClass:[MDCTabBarViewItemView class]]) {
+      ((MDCTabBarViewItemView *)itemView).minHeightTitleAndImage = _minItemHeightTitleAndImage;
+    }
+  }
+}
+
+- (void)setItemImageTitlePadding:(CGFloat)itemImageTitlePadding {
+  _itemImageTitlePadding = itemImageTitlePadding;
+  for (UIView *itemView in self.itemViews) {
+    if ([itemView isKindOfClass:[MDCTabBarViewItemView class]]) {
+      ((MDCTabBarViewItemView *)itemView).imageTitlePadding = _itemImageTitlePadding;
+    }
+  }
 }
 
 - (void)setItems:(NSArray<UITabBarItem *> *)items {
@@ -314,6 +355,8 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
       mdcItemView.badgeAppearance = self.itemBadgeAppearance;
       mdcItemView.iconSize = self.itemIconSize;
+      mdcItemView.minHeightTitleAndImage = self.minItemHeightTitleAndImage;
+      mdcItemView.imageTitlePadding = self.itemImageTitlePadding;
       mdcItemView.badgeOffset = self.badgeOffset;
 
 #if defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
@@ -606,19 +649,17 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 #pragma mark - MDCTabBarViewItemViewDelegate
 
 - (UIEdgeInsets)contentInsetsForItemViewStyle:(MDCTabBarViewItemViewStyle)itemViewStyle {
-  if (self.useDefaultItemViewContentInsets) {
+  if (self.useIndividualItemViewContentInsets) {
     switch (itemViewStyle) {
       case 0:
-        return kDefaultItemViewContentInsetsTextOnly;
+        return self.itemViewContentInsetsTextOnly;
       case 1:
-        return kDefaultItemViewContentInsetsImageOnly;
+        return self.itemViewContentInsetsImageOnly;
       case 2:
-        return kDefaultItemViewContentInsetsTextAndImage;
+        return self.itemViewContentInsetsTextAndImage;
     }
-    return self.itemViewContentInsets;
-  } else {
-    return self.itemViewContentInsets;
   }
+  return self.itemViewContentInsets;
 }
 
 #pragma mark - UIAccessibility

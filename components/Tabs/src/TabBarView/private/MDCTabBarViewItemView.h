@@ -111,6 +111,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property(nonatomic) CGPoint badgeOffset;
 
+/**
+ * The minimum height of the view when the title and image are displayed.
+ */
+@property(nonatomic) CGFloat minHeightTitleAndImage;
+
+/**
+ * The padding between the item title and image.
+ */
+@property(nonatomic) CGFloat imageTitlePadding;
+
 @end
 
 NS_ASSUME_NONNULL_END

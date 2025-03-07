@@ -113,6 +113,8 @@ static const CGFloat kBadgeXInset = 12;
   }
 
   _iconSize = CGSizeZero;
+  _minHeightTitleAndImage = kMinHeightTitleAndImage;
+  _imageTitlePadding = kImageTitlePadding;
 }
 
 - (CGPoint)badgeCenterFromFrame:(CGRect)frame isRTL:(BOOL)isRTL {
@@ -220,8 +222,9 @@ static const CGFloat kBadgeXInset = 12;
 
   CGSize contentSize = CGSizeMake(CGRectGetWidth(contentFrame), CGRectGetHeight(contentFrame));
   CGSize labelSingleLineSize = self.titleLabel.intrinsicContentSize;
-  CGSize availableIconSize = CGSizeMake(
-      contentSize.width, contentSize.height - (kImageTitlePadding + labelSingleLineSize.height));
+  CGSize availableIconSize =
+      CGSizeMake(contentSize.width,
+                 contentSize.height - (self.imageTitlePadding + labelSingleLineSize.height));
 
   // Position the image, limiting it so that at least 1 line of text remains.
   CGSize imageIntrinsicContentSize = CGSizeEqualToSize(self.iconSize, CGSizeZero)
@@ -245,7 +248,7 @@ static const CGFloat kBadgeXInset = 12;
   // Now position the label from the bottom.
   CGSize availableLabelSize =
       CGSizeMake(contentSize.width,
-                 contentSize.height - (CGRectGetHeight(imageViewFrame) + kImageTitlePadding));
+                 contentSize.height - (CGRectGetHeight(imageViewFrame) + self.imageTitlePadding));
   CGSize finalLabelSize = [self.titleLabel sizeThatFits:availableLabelSize];
   CGRect titleFrame = CGRectMake(CGRectGetMidX(contentFrame) - (finalLabelSize.width / 2),
                                  CGRectGetMaxY(contentFrame) - finalLabelSize.height,
@@ -309,7 +312,9 @@ static const CGFloat kBadgeXInset = 12;
 - (CGSize)sizeThatFitsTextAndImage:(CGSize)size {
   CGSize maxSize = CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX);
   CGSize labelFitSize = [self.titleLabel sizeThatFits:maxSize];
-  CGSize imageFitSize = self.iconImageView.intrinsicContentSize;
+  CGSize imageFitSize = CGSizeEqualToSize(self.iconSize, CGSizeZero)
+                            ? self.iconImageView.intrinsicContentSize
+                            : self.iconSize;
   UIEdgeInsets contentInsets =
       [self contentInsetsForItemViewStyle:MDCTabBarViewItemViewStyleTextAndImage];
   if (self.badgeText != nil) {
@@ -318,14 +323,16 @@ static const CGFloat kBadgeXInset = 12;
     return CGSizeMake(
         MAX([self minWidth],
             contentInsets.left + MAX(badgeIconWidth, labelFitSize.width) + contentInsets.right),
-        MAX(kMinHeightTitleAndImage, contentInsets.top + imageFitSize.height + kImageTitlePadding +
-                                         labelFitSize.height + contentInsets.bottom));
+        MAX(self.minHeightTitleAndImage, contentInsets.top + imageFitSize.height +
+                                             self.imageTitlePadding + labelFitSize.height +
+                                             contentInsets.bottom));
   }
   return CGSizeMake(
       MAX([self minWidth],
           contentInsets.left + MAX(imageFitSize.width, labelFitSize.width) + contentInsets.right),
-      MAX(kMinHeightTitleAndImage, contentInsets.top + imageFitSize.height + kImageTitlePadding +
-                                       labelFitSize.height + contentInsets.bottom));
+      MAX(self.minHeightTitleAndImage, contentInsets.top + imageFitSize.height +
+                                           self.imageTitlePadding + labelFitSize.height +
+                                           contentInsets.bottom));
 }
 
 #pragma mark - MDCTabBarViewItemView properties
