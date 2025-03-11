@@ -121,6 +121,19 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property(nonatomic) CGFloat imageTitlePadding;
 
+/**
+ * Whether or not to enforce padding between the tab bar item's image and title.
+ *
+ * If set to @c YES, the tab bar item's image and title will be top-aligned with the
+ * @c itemImageTitlePadding in between.
+ *
+ * If set to @c NO, the tab bar item's image will be aligned to the top while the title will be
+ * aligned to the bottom inside the edge insets.
+ *
+ * Defaults to @c NO.
+ */
+@property(nonatomic) BOOL enforceTextAndImagePadding;
+
 @end
 
 NS_ASSUME_NONNULL_END

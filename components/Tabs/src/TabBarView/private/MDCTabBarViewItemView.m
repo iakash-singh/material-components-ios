@@ -115,6 +115,7 @@ static const CGFloat kBadgeXInset = 12;
   _iconSize = CGSizeZero;
   _minHeightTitleAndImage = kMinHeightTitleAndImage;
   _imageTitlePadding = kImageTitlePadding;
+  _enforceTextAndImagePadding = NO;
 }
 
 - (CGPoint)badgeCenterFromFrame:(CGRect)frame isRTL:(BOOL)isRTL {
@@ -245,14 +246,23 @@ static const CGFloat kBadgeXInset = 12;
     return;
   }
 
-  // Now position the label from the bottom.
+  // Now position the label in the remaining space.
   CGSize availableLabelSize =
       CGSizeMake(contentSize.width,
                  contentSize.height - (CGRectGetHeight(imageViewFrame) + self.imageTitlePadding));
   CGSize finalLabelSize = [self.titleLabel sizeThatFits:availableLabelSize];
-  CGRect titleFrame = CGRectMake(CGRectGetMidX(contentFrame) - (finalLabelSize.width / 2),
-                                 CGRectGetMaxY(contentFrame) - finalLabelSize.height,
-                                 finalLabelSize.width, finalLabelSize.height);
+  CGFloat titleFrameX = CGRectGetMidX(contentFrame) - (finalLabelSize.width / 2);
+  CGRect titleFrame;
+  if (self.enforceTextAndImagePadding) {
+    // Position the label below the image and padding.
+    titleFrame = CGRectMake(
+        titleFrameX, CGRectGetMinY(contentFrame) + imageFinalSize.height + self.imageTitlePadding,
+        finalLabelSize.width, finalLabelSize.height);
+  } else {
+    // Position the label from bottom.
+    titleFrame = CGRectMake(titleFrameX, CGRectGetMaxY(contentFrame) - finalLabelSize.height,
+                            finalLabelSize.width, finalLabelSize.height);
+  }
   titleFrame = MDCRectAlignToScale(titleFrame, self.window.screen.scale);
   *titleLabelFrame = titleFrame;
 }

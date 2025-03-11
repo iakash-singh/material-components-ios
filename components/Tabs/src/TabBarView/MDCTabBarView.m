@@ -19,7 +19,6 @@
 #import "private/MDCTabBarViewItemView.h"
 #import "private/MDCTabBarViewItemViewDelegate.h"
 #import "private/MDCTabBarViewPrivateIndicatorContext.h"
-#import "MDCAvailability.h"
 #import "MDCBadgeAppearance.h"
 #import "MDCRippleTouchController.h"
 #import "MDCRippleView.h"
@@ -89,11 +88,9 @@ static NSString *const kLargeContentSizeImageInsets = @"largeContentSizeImageIns
 static NSString *const kBadgeValueKeyPath = @"badgeValue";
 static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
-#ifdef __IPHONE_13_4
 @interface MDCTabBarView (PointerInteractions) <UIPointerInteractionDelegate,
                                                 MDCTabBarViewItemViewDelegate>
 @end
-#endif
 
 @interface MDCTabBarView ()
 
@@ -131,14 +128,11 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
 @property(nonatomic) BOOL useIndividualItemViewContentInsets;
 
-#if defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
 /**
  The last large content viewer item displayed by the content viewer while the interaction is
  running. When the interaction ends this property is nil.
  */
-@property(nonatomic, nullable) id<UILargeContentViewerItem> lastLargeContentViewerItem
-    NS_AVAILABLE_IOS(13_0);
-#endif  // defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
+@property(nonatomic, nullable) id<UILargeContentViewerItem> lastLargeContentViewerItem;
 
 @end
 
@@ -182,6 +176,7 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   self.backgroundColor = UIColor.whiteColor;
   self.showsHorizontalScrollIndicator = NO;
 
+  _enforceTextAndImagePadding = NO;
   _itemBadgeAppearance = [[MDCBadgeAppearance alloc] init];
   _itemBadgeAppearance.textColor = UIColor.whiteColor;
   _itemBadgeAppearance.font = [UIFont systemFontOfSize:kBadgeFontSize];
@@ -218,13 +213,9 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   // gesture.
   self.scrollsToTop = NO;
 
-#if defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
-  if (@available(iOS 13, *)) {
-    // If clients report conflicting gesture recognizers please see proposed solution in the
-    // internal document: go/mdc-ios-bottomnavigation-largecontentvieweritem
-    [self addInteraction:[[UILargeContentViewerInteraction alloc] initWithDelegate:self]];
-  }
-#endif  // defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
+  // If clients report conflicting gesture recognizers please see proposed solution in the
+  // internal document: go/mdc-ios-bottomnavigation-largecontentvieweritem
+  [self addInteraction:[[UILargeContentViewerInteraction alloc] initWithDelegate:self]];
 }
 
 - (void)dealloc {
@@ -280,18 +271,6 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   _useIndividualItemViewContentInsets = NO;
 }
 
-- (void)setItemViewContentInsetsTextOnly:(UIEdgeInsets)itemViewContentInsetsTextOnly {
-  _itemViewContentInsetsTextOnly = itemViewContentInsetsTextOnly;
-}
-
-- (void)setItemViewContentInsetsImageOnly:(UIEdgeInsets)itemViewContentInsetsImageOnly {
-  _itemViewContentInsetsImageOnly = itemViewContentInsetsImageOnly;
-}
-
-- (void)setItemViewContentInsetsTextAndImage:(UIEdgeInsets)itemViewContentInsetsTextAndImage {
-  _itemViewContentInsetsTextAndImage = itemViewContentInsetsTextAndImage;
-}
-
 - (void)setMinItemHeightTitleAndImage:(CGFloat)minItemHeightTitleAndImage {
   _minItemHeightTitleAndImage = minItemHeightTitleAndImage;
   for (UIView *itemView in self.itemViews) {
@@ -306,6 +285,15 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   for (UIView *itemView in self.itemViews) {
     if ([itemView isKindOfClass:[MDCTabBarViewItemView class]]) {
       ((MDCTabBarViewItemView *)itemView).imageTitlePadding = _itemImageTitlePadding;
+    }
+  }
+}
+
+- (void)setEnforceTextAndImagePadding:(BOOL)enforceTextAndImagePadding {
+  _enforceTextAndImagePadding = enforceTextAndImagePadding;
+  for (UIView *itemView in self.itemViews) {
+    if ([itemView isKindOfClass:[MDCTabBarViewItemView class]]) {
+      ((MDCTabBarViewItemView *)itemView).enforceTextAndImagePadding = _enforceTextAndImagePadding;
     }
   }
 }
@@ -358,31 +346,17 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
       mdcItemView.minHeightTitleAndImage = self.minItemHeightTitleAndImage;
       mdcItemView.imageTitlePadding = self.itemImageTitlePadding;
       mdcItemView.badgeOffset = self.badgeOffset;
-
-#if defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
-      if (@available(iOS 13, *)) {
-        mdcItemView.largeContentImageInsets = item.largeContentSizeImageInsets;
-        mdcItemView.largeContentImage = item.largeContentSizeImage;
-      }
-#endif  // defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
-
+      mdcItemView.enforceTextAndImagePadding = self.enforceTextAndImagePadding;
+      mdcItemView.largeContentImageInsets = item.largeContentSizeImageInsets;
+      mdcItemView.largeContentImage = item.largeContentSizeImage;
       itemView = mdcItemView;
     }
     UITapGestureRecognizer *tapGesture =
         [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapItemView:)];
     [itemView addGestureRecognizer:tapGesture];
 
-#ifdef __IPHONE_13_4
-    if (@available(iOS 13.4, *)) {
-      // Because some iOS 13 betas did not have the UIPointerInteraction class, we need to verify
-      // that it exists before attempting to use it.
-      if (NSClassFromString(@"UIPointerInteraction")) {
-        UIPointerInteraction *pointerInteraction =
-            [[UIPointerInteraction alloc] initWithDelegate:self];
-        [itemView addInteraction:pointerInteraction];
-      }
-    }
-#endif
+    UIPointerInteraction *pointerInteraction = [[UIPointerInteraction alloc] initWithDelegate:self];
+    [itemView addInteraction:pointerInteraction];
 
     [self addSubview:itemView];
     [itemViews addObject:itemView];
@@ -835,18 +809,12 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
         tabBarItemView.accessibilityTraits =
             (tabBarItemView.accessibilityTraits | UIAccessibilityTraitSelected);
       }
-#if defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
     } else if ([keyPath isEqualToString:NSStringFromSelector(@selector(largeContentSizeImage))]) {
-      if (@available(iOS 13.0, *)) {
-        tabBarItemView.largeContentImage = newValue;
-      }
+      tabBarItemView.largeContentImage = newValue;
     } else if ([keyPath
                    isEqualToString:NSStringFromSelector(@selector(largeContentSizeImageInsets))]) {
-      if (@available(iOS 13.0, *)) {
-        tabBarItemView.largeContentImageInsets = [newValue UIEdgeInsetsValue];
-      }
+      tabBarItemView.largeContentImageInsets = [newValue UIEdgeInsetsValue];
     }
-#endif  // defined(__IPHONE_13_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0)
   } else {
     [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
   }
@@ -1271,18 +1239,14 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 }
 
 - (void)invalidateInteractionsForItemViews {
-#ifdef __IPHONE_13_4
-  if (@available(iOS 13.4, *)) {
-    for (MDCTabBarView *view in self.itemViews) {
-      for (id<UIInteraction> interaction in view.interactions) {
-        if ([interaction isKindOfClass:[UIPointerInteraction class]]) {
-          UIPointerInteraction *pointerInteraction = (UIPointerInteraction *)interaction;
-          [pointerInteraction invalidate];
-        }
+  for (MDCTabBarView *view in self.itemViews) {
+    for (id<UIInteraction> interaction in view.interactions) {
+      if ([interaction isKindOfClass:[UIPointerInteraction class]]) {
+        UIPointerInteraction *pointerInteraction = (UIPointerInteraction *)interaction;
+        [pointerInteraction invalidate];
       }
     }
   }
-#endif
 }
 
 - (CGRect)estimatedFrameForItemAtIndex:(NSUInteger)index {
@@ -1520,9 +1484,8 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
 #pragma mark - UIPointerInteractionDelegate
 
-#ifdef __IPHONE_13_4
 - (nullable UIPointerStyle *)pointerInteraction:(UIPointerInteraction *)interaction
-                                 styleForRegion:(UIPointerRegion *)region API_AVAILABLE(ios(13.4)) {
+                                 styleForRegion:(UIPointerRegion *)region {
   UIPointerStyle *pointerStyle = nil;
   if (interaction.view) {
     UITargetedPreview *targetedPreview = [[UITargetedPreview alloc] initWithView:interaction.view];
@@ -1532,7 +1495,6 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   }
   return pointerStyle;
 }
-#endif
 
 #pragma mark - UILargeContentViewerInteractionDelegate
 
@@ -1548,11 +1510,9 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
   return nil;
 }
 
-#if MDC_AVAILABLE_SDK_IOS(13_0)
 - (nullable id<UILargeContentViewerItem>)largeContentViewerInteraction:
                                              (UILargeContentViewerInteraction *)interaction
-                                                           itemAtPoint:(CGPoint)point
-    NS_AVAILABLE_IOS(13_0) {
+                                                           itemAtPoint:(CGPoint)point {
   if (!CGRectContainsPoint(self.bounds, point)) {
     // The touch has wandered outside of the view. Do not display the content viewer.
     if ([self.lastLargeContentViewerItem isKindOfClass:[MDCTabBarViewItemView class]]) {
@@ -1590,7 +1550,7 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
 - (void)largeContentViewerInteraction:(UILargeContentViewerInteraction *)interaction
                          didEndOnItem:(nullable id<UILargeContentViewerItem>)item
-                              atPoint:(CGPoint)point NS_AVAILABLE_IOS(13_0) {
+                              atPoint:(CGPoint)point {
   if (item) {
     for (NSUInteger i = 0; i < self.items.count; i++) {
       UIView *itemView = self.itemViews[i];
@@ -1607,7 +1567,6 @@ static NSString *const kBadgeColorKeyPath = @"badgeColor";
 
   self.lastLargeContentViewerItem = nil;
 }
-#endif  // MDC_AVAILABLE_SDK_IOS(13_0)
 
 @end
 
