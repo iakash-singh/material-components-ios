@@ -42,8 +42,9 @@ typedef NS_ENUM(NSInteger, MDCBannerViewLayoutStyle) {
  The [Material Guideline](https://material.io/design/components/banners.html) has more details on
  component usage.
  */
-__attribute__((objc_subclassing_restricted)) @interface MDCBannerView
-    : UIView<MDCElevatable, MDCElevationOverriding>
+__attribute__((objc_subclassing_restricted))
+@interface MDCBannerView
+    : UIView<MDCElevatable, MDCElevationOverriding, UIContentSizeCategoryAdjusting>
 #pragma clang diagnostic pop
 
 /**
@@ -147,6 +148,12 @@ __attribute__((objc_subclassing_restricted)) @interface MDCBannerView
  Defaults to NO.
  */
 @property(nonatomic, readonly) BOOL isM3CButtonEnabled;
+
+/**
+ A Boolean that indicates whether the object automatically updates its font when the device’s
+ content size category changes.
+ */
+@property(nonatomic, readwrite, assign) BOOL adjustsFontForContentSizeCategory;
 
 /** Initializes the @c MDCBannerView to be compatible with M3. This
  * means using @c M3CButton instead of @c MDCButton for @c leadingButton and
