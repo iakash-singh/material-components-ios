@@ -75,6 +75,7 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
 @property(nonatomic, readwrite, strong) NSLayoutConstraint *textViewConstraintTrailing;
 @property(nonatomic, readwrite, strong) NSLayoutConstraint *textViewConstraintTop;
 @property(nonatomic, readwrite, strong) NSLayoutConstraint *textViewConstraintCenterY;
+@property(nonatomic, readwrite, strong) NSLayoutConstraint *textViewConstraintHeight;
 // Buttons constraints
 @property(nonatomic, readwrite, strong) NSLayoutConstraint *buttonContainerConstraintLeading;
 @property(nonatomic, readwrite, strong)
@@ -155,6 +156,8 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
   self.layoutMargins = UIEdgeInsetsZero;
   self.contentEdgeInsets = UIEdgeInsetsZero;
   self.adjustsFontForContentSizeCategory = NO;
+  self.numberOfLinesInTextView = 0;
+
   UIView *contentView = [[UIView alloc] init];
   contentView.translatesAutoresizingMaskIntoConstraints = NO;
   _contentView = contentView;
@@ -250,6 +253,17 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
   return self.divider.backgroundColor;
 }
 
+- (void)setNumberOfLinesInTextView:(NSUInteger)numberOfLinesInTextView {
+  _numberOfLinesInTextView = numberOfLinesInTextView;
+  if (_numberOfLinesInTextView == 0) {
+    self.textView.textContainer.maximumNumberOfLines = kTextNumberOfLineLimit;
+    self.textView.textContainer.lineBreakMode = NSLineBreakByTruncatingTail;
+  } else {
+    self.textView.textContainer.maximumNumberOfLines = 0;
+    self.textView.textContainer.lineBreakMode = NSLineBreakByWordWrapping;
+  }
+}
+
 - (void)setContentEdgeInsets:(UIEdgeInsets)contentEdgeInsets {
   _contentEdgeInsets = contentEdgeInsets;
 
@@ -325,6 +339,7 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
   self.textViewConstraintLeadingWithMargin =
       [self.textView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
                                                   constant:kLeadingPadding];
+  self.textViewConstraintHeight = [self.textView.heightAnchor constraintEqualToConstant:0.f];
 }
 
 - (void)setUpButtonContainerConstraints {
@@ -429,6 +444,7 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
   self.textViewConstraintTrailing.active = NO;
   self.textViewConstraintTop.active = NO;
   self.textViewConstraintCenterY.active = NO;
+  self.textViewConstraintHeight.active = NO;
   self.buttonContainerConstraintLeading.active = NO;
   self.buttonContainerConstraintWidthWithLeadingButton.active = NO;
   self.buttonContainerConstraintLeadingWithTextView.active = NO;
@@ -488,8 +504,7 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
         widthLimit -= kImageViewSideLength;
         widthLimit -= kSpaceBetweenIconImageAndTextView;
       }
-      CGSize textViewSize = [self.textView sizeThatFits:CGSizeMake(widthLimit, CGFLOAT_MAX)];
-      CGFloat maximumHeight = textViewSize.height;
+      CGFloat maximumHeight = [self getDisplayedTextViewHeight:widthLimit];
       if (!leadingButton.hidden) {
         CGSize leadingButtonSize = [leadingButton sizeThatFits:CGSizeZero];
         maximumHeight = MAX(leadingButtonSize.height, maximumHeight);
@@ -612,6 +627,9 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
 - (void)layoutSubviews {
   [super layoutSubviews];
   [self invalidateIntrinsicContentSize];
+  if (self.textView.scrollEnabled) {
+    [self.textView flashScrollIndicators];
+  }
 }
 
 #pragma mark - Layout methods
@@ -658,6 +676,9 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
     self.buttonContainerConstraintTopWithTextViewGreater.active = YES;
     self.buttonContainerConstraintTopWithTextView.active = YES;
     self.buttonContainerConstraintLeading.active = YES;
+  }
+  if (self.numberOfLinesInTextView > 0) {
+    self.textViewConstraintHeight.active = YES;
   }
   [self updateButtonsConstraintsWithLayoutStyle:layoutStyle];
 
@@ -740,14 +761,17 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
 - (CGFloat)getFrameHeightOfImageViewAndTextViewWithSizeToFit:(CGSize)sizeToFit {
   CGFloat frameHeight = 0;
   CGFloat remainingWidth = sizeToFit.width;
-  CGSize textViewSize = CGSizeZero;
+  CGFloat textViewHeight = 0;
+
   if (!self.imageView.hidden) {
     remainingWidth -= (kImageViewSideLength + kSpaceBetweenIconImageAndTextView);
-    textViewSize = [self.textView sizeThatFits:CGSizeMake(remainingWidth, CGFLOAT_MAX)];
-    frameHeight += MAX(textViewSize.height, kImageViewSideLength);
+    // If the text view will become smaller than image view, consider the image view as the
+    // limiting factor.
+    textViewHeight = [self getDisplayedTextViewHeight:remainingWidth];
+    frameHeight += MAX(textViewHeight, kImageViewSideLength);
   } else {
-    textViewSize = [self.textView sizeThatFits:CGSizeMake(remainingWidth, CGFLOAT_MAX)];
-    frameHeight += textViewSize.height;
+    textViewHeight = [self getDisplayedTextViewHeight:remainingWidth];
+    frameHeight += textViewHeight;
   }
   CGFloat verticalSpace = _isM3CButtonEnabled ? kVerticalSpaceBetweenButtonAndTextViewWithM3CButton
                                               : kVerticalSpaceBetweenButtonAndTextView;
@@ -780,6 +804,47 @@ static NSString *const kMDCBannerViewImageViewImageKeyPath = @"image";
 - (BOOL)isAbleToFitTextView:(UITextView *)textView withWidthLimit:(CGFloat)widthLimit {
   CGSize size = [textView sizeThatFits:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)];
   return size.width <= widthLimit;
+}
+
+/// Returns the height of the text view that is currently displayed.
+- (CGFloat)getDisplayedTextViewHeight:(CGFloat)availableWidth {
+  // If the text view height is not restricted, return the height of the text view that fits
+  // the remaining width.
+  if (self.numberOfLinesInTextView == 0) {
+    CGSize textViewSize = [self.textView sizeThatFits:CGSizeMake(availableWidth, CGFLOAT_MAX)];
+    return textViewSize.height;
+  }
+
+  // If the text view height is restricted, find the height of the text view that fits the
+  // remaining width and the maximum number of lines.
+  self.textView.textContainer.maximumNumberOfLines = self.numberOfLinesInTextView;
+  // Must manually notify the layout manager of new line restriction for sizeThatFits to return the
+  // correct height on iOS 15.5 and below.
+  [self.textView.layoutManager textContainerChangedGeometry:self.textView.textContainer];
+  CGFloat lineLimitedHeight =
+      [self.textView sizeThatFits:CGSizeMake(availableWidth, CGFLOAT_MAX)].height;
+
+  // Calculate height of text view with no line limit.
+  self.textView.textContainer.maximumNumberOfLines = 0;
+  // Must manually notify the layout manager of new line restriction for sizeThatFits to return the
+  // correct height on iOS 15.5 and below.
+  [self.textView.layoutManager textContainerChangedGeometry:self.textView.textContainer];
+  CGFloat textViewFullHeight =
+      [self.textView sizeThatFits:CGSizeMake(availableWidth, CGFLOAT_MAX)].height;
+
+  // If the text view intrinsic height is greater than the line limited height, enable scrolling and
+  // update the text view height constraint to the line limited height.
+  if (textViewFullHeight > lineLimitedHeight + FLT_EPSILON) {
+    self.textViewConstraintHeight.constant = lineLimitedHeight;
+    self.textView.scrollEnabled = YES;
+    self.textView.contentOffset = CGPointZero;
+    [self.textView flashScrollIndicators];
+    return lineLimitedHeight;
+  } else {
+    self.textViewConstraintHeight.constant = textViewFullHeight;
+    self.textView.scrollEnabled = NO;
+    return textViewFullHeight;
+  }
 }
 
 #pragma mark - Font

@@ -155,6 +155,17 @@ __attribute__((objc_subclassing_restricted))
  */
 @property(nonatomic, readwrite, assign) BOOL adjustsFontForContentSizeCategory;
 
+/**
+ * Indicates the maximum number of lines that the text view of the MDCBannerView should display,
+ * before its height is limited and it becomes scrollable.
+ *
+ * Defaults to 0.
+ *
+ * Setting this property to 0 will enforce the default 3 line limit of the text view of
+ * the MDCBannerView and truncate text at the tail if needed.
+ */
+@property(nonatomic, readwrite, assign) NSUInteger numberOfLinesInTextView;
+
 /** Initializes the @c MDCBannerView to be compatible with M3. This
  * means using @c M3CButton instead of @c MDCButton for @c leadingButton and
  * @c trailingButton.
