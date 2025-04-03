@@ -9,6 +9,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// Minimum touch size recommended by Apple:
+// https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility
+static const CGFloat kMinimumTouchTarget = 44.f;
+
 @interface M3CButton () {
   NSMutableDictionary<NSNumber *, UIColor *> *_backgroundColors;
   NSMutableDictionary<NSNumber *, UIColor *> *_tintColors;
@@ -22,11 +26,21 @@ NS_ASSUME_NONNULL_BEGIN
   NSMutableDictionary<NSNumber *, NSValue *> *_edgeInsetsWithImageAndTitleForSize;
   NSMutableDictionary<NSNumber *, NSValue *> *_edgeInsetsWithImageForSize;
   NSMutableDictionary<NSNumber *, NSValue *> *_edgeInsetsWithTitleForSize;
+  CGSize _visualContentSize;
   BOOL _customInsetAvailable;
   BOOL _buttonSizeSet;
 }
 
 @property(nonatomic, assign) M3CButtonSize buttonSize API_AVAILABLE(ios(15.0));
+
+/**
+ The visual representation of the background.
+
+ @note Generally has no side effects and is an extra subview hierarchy. But, in instances
+ where touch targets are not met, this replaces the background while the background remains the
+ touch target size but changes to clear.
+ */
+@property(nonatomic, strong, nonnull) UIView *visualBackground;
 
 // Used only when layoutTitleWithConstraints is enabled.
 @property(nonatomic, strong, nullable) NSLayoutConstraint *titleTopConstraint;
@@ -70,8 +84,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)initCommon {
   self.animationDuration = 0.3f;
-  self.minimumHeight = 44.0f;
-  self.minimumWidth = 44.0f;
+  self.minimumHeight = kMinimumTouchTarget;
+  self.minimumWidth = kMinimumTouchTarget;
   _borderColors = [NSMutableDictionary dictionary];
   _shadows = [NSMutableDictionary dictionary];
   _fonts = [NSMutableDictionary dictionary];
@@ -83,6 +97,10 @@ NS_ASSUME_NONNULL_BEGIN
   _edgeInsetsWithImageForSize = [NSMutableDictionary dictionary];
   _edgeInsetsWithTitleForSize = [NSMutableDictionary dictionary];
   _customInsetAvailable = NO;
+  _visualBackground = [[UIView alloc] init];
+  _visualBackground.exclusiveTouch = NO;
+  _visualBackground.userInteractionEnabled = NO;
+  _visualContentSize = CGSizeZero;
 
   if (!_backgroundColors) {
     // _backgroundColors may have already been initialized by setting the backgroundColor setter.
@@ -105,6 +123,8 @@ NS_ASSUME_NONNULL_BEGIN
   _buttonSizeSet = YES;
   _buttonSize = buttonSize;
 
+  [self addSubview:self.visualBackground];
+  [self sendSubviewToBack:self.visualBackground];
   [self updateInsets];
   [self updateFont];
   [self updateSymbolFont];
@@ -151,8 +171,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSNumber *currentCornerRadius = _cornerRadius[@(self.buttonSize)] ?: cornerRadiusValue;
 
   if (_buttonSizeSet && !(currentCornerRadius == nil)) {
-    self.layer.cornerRadius = [currentCornerRadius floatValue];
-    self.layer.cornerCurve = kCACornerCurveCircular;
+    [self updateCorners];
   }
 }
 
@@ -259,7 +278,13 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)updateColors {
-  self.backgroundColor = [self backgroundColorForState:self.state];
+  if (_buttonSizeSet) {
+    self.visualBackground.backgroundColor = [self backgroundColorForState:self.state];
+    self.backgroundColor = UIColor.clearColor;
+  } else {
+    self.backgroundColor = [self backgroundColorForState:self.state];
+  }
+
   [self updateImageColorForState:self.state];
   [self updateCGColors];
 }
@@ -319,6 +344,8 @@ NS_ASSUME_NONNULL_BEGIN
     }
   }
 
+  self.visualBackground.layer.cornerRadius = [currentCornerRadius floatValue];
+  self.visualBackground.layer.cornerCurve = kCACornerCurveCircular;
   self.layer.cornerRadius = [currentCornerRadius floatValue];
   self.layer.cornerCurve = kCACornerCurveCircular;
 }
@@ -473,6 +500,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setTitle:(nullable NSString *)title forState:(UIControlState)state {
   [super setTitle:title forState:state];
   [self updateInsets];
+
+  // If the button size is set, then the visual background is a subview of the button. If a client
+  // sets the button size then the title we need to make sure that the title is not obscured by the
+  // visual background.
+  if (_buttonSizeSet) {
+    [self sendSubviewToBack:self.visualBackground];
+  }
 }
 
 - (void)setAttributedTitle:(nullable NSAttributedString *)title forState:(UIControlState)state {
@@ -483,6 +517,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setImage:(nullable UIImage *)image forState:(UIControlState)state {
   [super setImage:image forState:state];
   [self updateInsets];
+
+  // If the button size is set, then the visual background is a subview of the button. If a client
+  // sets the button size then the image we need to make sure that the image is not obscured by the
+  // visual background.
+  if (_buttonSizeSet) {
+    [self sendSubviewToBack:self.visualBackground];
+  }
 }
 
 - (void)traitCollectionDidChange:(nullable UITraitCollection *)previousTraitCollection {
@@ -494,12 +535,31 @@ NS_ASSUME_NONNULL_BEGIN
   [super layoutSubviews];
   [self setCapsuleCornersBasedOn:self.frame.size];
   [self updateShadows];
+
+  if (_buttonSizeSet) {
+    if (_visualContentSize.width < kMinimumTouchTarget ||
+        _visualContentSize.height < kMinimumTouchTarget) {
+      self.visualBackground.frame =
+          CGRectMake(MAX(0, (kMinimumTouchTarget - _visualContentSize.width) / 2),
+                     MAX(0, (kMinimumTouchTarget - _visualContentSize.height) / 2),
+                     _visualContentSize.width, _visualContentSize.height);
+    } else {
+      self.visualBackground.frame = self.bounds;
+    }
+  }
 }
 
 - (void)setCapsuleCornersBasedOn:(CGSize)size {
   if (self.isCapsuleShape) {
-    self.layer.cornerRadius = size.height / 2;
-    self.layer.cornerCurve = kCACornerCurveCircular;
+    if (_buttonSizeSet) {
+      self.visualBackground.layer.cornerRadius = MIN(size.height, _visualContentSize.height) / 2;
+      self.visualBackground.layer.cornerCurve = kCACornerCurveCircular;
+      self.layer.cornerRadius = self.visualBackground.layer.cornerRadius;
+      self.layer.cornerCurve = self.visualBackground.layer.cornerCurve;
+    } else {
+      self.layer.cornerRadius = size.height / 2;
+      self.layer.cornerCurve = kCACornerCurveCircular;
+    }
   }
 }
 
@@ -583,7 +643,13 @@ NS_ASSUME_NONNULL_BEGIN
     size = [super intrinsicContentSize];
   }
   CGSize clampToMinimumSize = [self clampToMinimumSize:size];
-  return clampToMinimumSize;
+  if (_buttonSizeSet) {
+    _visualContentSize = clampToMinimumSize;
+    return CGSizeMake(MAX(kMinimumTouchTarget, clampToMinimumSize.width),
+                      MAX(kMinimumTouchTarget, clampToMinimumSize.height));
+  } else {
+    return clampToMinimumSize;
+  }
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {
@@ -594,8 +660,14 @@ NS_ASSUME_NONNULL_BEGIN
     newSize = [super sizeThatFits:size];
   }
   CGSize clampToMinimumSize = [self clampToMinimumSize:newSize];
+  _visualContentSize = clampToMinimumSize;
   [self setCapsuleCornersBasedOn:clampToMinimumSize];
-  return clampToMinimumSize;
+  if (_buttonSizeSet) {
+    return CGSizeMake(MAX(kMinimumTouchTarget, clampToMinimumSize.width),
+                      MAX(kMinimumTouchTarget, clampToMinimumSize.height));
+  } else {
+    return clampToMinimumSize;
+  }
 }
 
 #pragma mark - CALayerDelegate
