@@ -29,11 +29,6 @@ public final class M3CTextView: UIView, M3CTextInput {
   var titleLabelColors: [UIControl.State: UIColor] = [:]
   var trailingLabelColors: [UIControl.State: UIColor] = [:]
   var tintColors: [UIControl.State: UIColor] = [:]
-  @objc public var placeholderColor: UIColor? {
-    didSet {
-      placeholderLabel.textColor = placeholderColor
-    }
-  }
 
   @objc public lazy var textContainer: UITextView = {
     let textContainer = M3CSelectableTextView()
@@ -49,26 +44,19 @@ public final class M3CTextView: UIView, M3CTextInput {
     textContainer.firstResponderChangeHandler = { [weak self] in
       self?.applyAllColors()
     }
+
     return textContainer
   }()
 
-  /// The text that is displayed when the text view is empty.
-  @objc public var placeholder: String? {
-    didSet {
-      updatePlaceholderVisibility()
+  /// Proxy property for the underlying text view's `delegate` property.
+  @objc public var delegate: UITextViewDelegate? {
+    get {
+      return textContainer.delegate
+    }
+    set {
+      textContainer.delegate = newValue
     }
   }
-
-  private lazy var placeholderLabel: UILabel = {
-    let label = UILabel()
-    label.translatesAutoresizingMaskIntoConstraints = false
-    label.font = textContainer.font
-    label.textColor = placeholderColor  // Default placeholder color
-    label.numberOfLines = 0
-    label.lineBreakMode = .byWordWrapping
-    label.isAccessibilityElement = false
-    return label
-  }()
 
   /// Proxy property for the underlying text view's `text` property.
   @objc public var text: String? {
@@ -92,9 +80,6 @@ public final class M3CTextView: UIView, M3CTextInput {
 
     configureStackViews()
     textContainer.setContentHuggingPriority(.defaultLow, for: .vertical)
-    addSubview(placeholderLabel)
-    configurePlaceholderConstraints()
-    updatePlaceholderVisibility()
     textContainer.setContentCompressionResistancePriority(.required, for: .vertical)
   }
 
@@ -168,39 +153,6 @@ public final class M3CTextView: UIView, M3CTextInput {
   override public func layoutSubviews() {
     super.layoutSubviews()
     hideEmptyLabels()
-  }
-
-  private func configurePlaceholderConstraints() {
-    NSLayoutConstraint.activate([
-      placeholderLabel.topAnchor.constraint(
-        equalTo: textContainer.topAnchor, constant: textContainer.textContainerInset.top),
-      placeholderLabel.leadingAnchor.constraint(
-        equalTo: textContainer.leadingAnchor, constant: textContainer.textContainerInset.left),
-      placeholderLabel.trailingAnchor.constraint(
-        equalTo: textContainer.trailingAnchor, constant: -textContainer.textContainerInset.right),
-      placeholderLabel.bottomAnchor.constraint(
-        lessThanOrEqualTo: textContainer.bottomAnchor,
-        constant: -textContainer.textContainerInset.bottom),
-    ])
-  }
-
-  private func updatePlaceholderVisibility() {
-    if let placeholderText = placeholder {
-      placeholderLabel.isHidden = !textContainer.text.isEmpty
-      placeholderLabel.text = textContainer.text.isEmpty ? placeholderText : ""
-      textContainer.accessibilityHint = textContainer.text.isEmpty ? placeholderText : nil
-    } else {
-      placeholderLabel.isHidden = true
-      textContainer.accessibilityHint = nil
-    }
-  }
-
-  // MARK: - UITextViewDelegate
-
-  public func textViewDidChange(_ textView: UITextView) {
-    DispatchQueue.main.async { [weak self] in
-      self?.updatePlaceholderVisibility()
-    }
   }
 }
 
@@ -299,6 +251,7 @@ extension M3CTextView {
     var firstResponderChangeHandler: (() -> Void)?
 
     /// These overrides are used to track `isFirstResponder`, which represents selection state.
+
     override func becomeFirstResponder() -> Bool {
       let didBecomeFirstResponder = super.becomeFirstResponder()
 
