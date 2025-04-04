@@ -644,7 +644,7 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   }
   CGSize clampToMinimumSize = [self clampToMinimumSize:size];
   if (_buttonSizeSet) {
-    _visualContentSize = clampToMinimumSize;
+    _visualContentSize = size;
     return CGSizeMake(MAX(kMinimumTouchTarget, clampToMinimumSize.width),
                       MAX(kMinimumTouchTarget, clampToMinimumSize.height));
   } else {
@@ -660,9 +660,9 @@ static const CGFloat kMinimumTouchTarget = 44.f;
     newSize = [super sizeThatFits:size];
   }
   CGSize clampToMinimumSize = [self clampToMinimumSize:newSize];
-  _visualContentSize = clampToMinimumSize;
   [self setCapsuleCornersBasedOn:clampToMinimumSize];
   if (_buttonSizeSet) {
+    _visualContentSize = newSize;
     return CGSizeMake(MAX(kMinimumTouchTarget, clampToMinimumSize.width),
                       MAX(kMinimumTouchTarget, clampToMinimumSize.height));
   } else {
