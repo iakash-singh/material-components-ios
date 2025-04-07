@@ -63,6 +63,11 @@ public final class M3CTextField: UIView, M3CTextInput {
   var tintColors: [UIControl.State: UIColor] = [:]
 
   @objc public var textContainer: UITextField
+  @objc public var placeholderColor: UIColor? {
+    didSet {
+      applyPlaceholderColor()
+    }
+  }
 
   /// Proxy property for the underlying text field's `delegate` property.
   @objc public var delegate: UITextFieldDelegate? {
@@ -126,6 +131,7 @@ public final class M3CTextField: UIView, M3CTextInput {
     }
     set {
       textContainer.placeholder = newValue
+      applyPlaceholderColor()
     }
   }
 
@@ -371,6 +377,23 @@ extension M3CTextField {
     titleLabel.textColor = titleLabelColor(for: state)
     supportingLabel.textColor = supportingLabelColor(for: state)
     trailingLabel.textColor = trailingLabelColor(for: state)
+  }
+
+  private func applyPlaceholderColor() {
+    if placeholderColor == nil {
+      return
+    }
+    var placeholderAttributes: [NSAttributedString.Key: Any] =
+      attributedPlaceholder?.attributes(at: 0, effectiveRange: nil) ?? [:]
+
+    placeholderAttributes[.foregroundColor] = placeholderColor
+    if let placeholderString = attributedPlaceholder?.string ?? placeholder,
+      !placeholderString.isEmpty
+    {
+      attributedPlaceholder = NSAttributedString(
+        string: placeholderString, attributes: placeholderAttributes)
+      textContainer.attributedPlaceholder = attributedPlaceholder
+    }
   }
 
   private func borderColor(for state: UIControl.State) -> UIColor? {
