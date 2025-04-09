@@ -552,7 +552,9 @@ static const CGFloat kMinimumTouchTarget = 44.f;
 - (void)setCapsuleCornersBasedOn:(CGSize)size {
   if (self.isCapsuleShape) {
     if (_buttonSizeSet) {
-      self.visualBackground.layer.cornerRadius = MIN(size.height, _visualContentSize.height) / 2;
+      CGFloat height = MIN(size.height, _visualContentSize.height);
+      CGFloat width = MIN(size.width, _visualContentSize.width);
+      self.visualBackground.layer.cornerRadius = MIN(height, width) / 2;
       self.visualBackground.layer.cornerCurve = kCACornerCurveCircular;
       self.layer.cornerRadius = self.visualBackground.layer.cornerRadius;
       self.layer.cornerCurve = self.visualBackground.layer.cornerCurve;
