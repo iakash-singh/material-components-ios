@@ -274,7 +274,12 @@ static const CGFloat kMinimumTouchTarget = 44.f;
 }
 
 - (void)updateCGColors {
-  self.layer.borderColor = [[self borderColorForState:self.state] CGColor];
+  if (_buttonSizeSet) {
+    self.visualBackground.layer.borderColor = [self borderColorForState:self.state].CGColor;
+    self.layer.borderColor = UIColor.clearColor.CGColor;
+  } else {
+    self.layer.borderColor = [self borderColorForState:self.state].CGColor;
+  }
 }
 
 - (void)updateColors {
@@ -443,6 +448,14 @@ static const CGFloat kMinimumTouchTarget = 44.f;
     }
     _customInsetAvailable = NO;
   }
+}
+
+- (void)setBorderWidth:(CGFloat)borderWidth {
+  self.visualBackground.layer.borderWidth = borderWidth;
+}
+
+- (CGFloat)borderWidth {
+  return self.visualBackground.layer.borderWidth;
 }
 
 - (void)setTextCanWrap:(BOOL)textCanWrap {

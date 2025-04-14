@@ -157,6 +157,13 @@ and edge insets. This method is available in iOS 15.0 and later.
 @property(nonatomic) UIEdgeInsets edgeInsetsWithTitleOnly;
 
 /**
+ The width of the border of the button.
+
+ @note Using @c self.layer.borderWidth is discouraged.
+ */
+@property(nonatomic, assign) CGFloat borderWidth;
+
+/**
  The minimum height of the button.
 */
 @property(nonatomic) CGFloat minimumHeight;
