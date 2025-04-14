@@ -126,6 +126,7 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   [self addSubview:self.visualBackground];
   [self sendSubviewToBack:self.visualBackground];
   [self updateInsets];
+  [self updateCorners];
   [self updateFont];
   [self updateSymbolFont];
 }
