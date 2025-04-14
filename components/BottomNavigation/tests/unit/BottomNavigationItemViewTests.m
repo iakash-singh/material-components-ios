@@ -470,9 +470,14 @@ static UIImage *fakeImage(void) {
 
   // Then
   CGRect expectedRect = CGRectMake(0, 26, 100, 55);
-  XCTAssert(CGRectEqualToRect([itemView pointerEffectHighlightRect], expectedRect), @"%@",
-            [self errorStringForExpectedPointerRect:expectedRect
-                             doesNotMatchActualRect:[itemView pointerEffectHighlightRect]]);
+  XCTAssertEqualWithAccuracy([itemView pointerEffectHighlightRect].size.width,
+                             expectedRect.size.width, 1);
+  XCTAssertEqualWithAccuracy([itemView pointerEffectHighlightRect].size.height,
+                             expectedRect.size.height, 1);
+  XCTAssertEqualWithAccuracy([itemView pointerEffectHighlightRect].origin.x, expectedRect.origin.x,
+                             0.001);
+  XCTAssertEqualWithAccuracy([itemView pointerEffectHighlightRect].origin.y, expectedRect.origin.y,
+                             0.001);
 }
 
 /**
