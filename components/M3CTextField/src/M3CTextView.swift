@@ -12,6 +12,39 @@ public final class M3CTextView: UIView, M3CTextInput {
     }
   }
 
+  /// The text that is displayed when the text view is empty.
+  @objc public var placeholder: String? {
+    didSet {
+      placeholderLabel.text = placeholder
+      updatePlaceholderVisibility()
+    }
+  }
+
+  /// The color of the placeholder text.
+  @objc public var placeholderColor: UIColor? {
+    didSet {
+      placeholderLabel.textColor = placeholderColor ?? .gray
+    }
+  }
+
+  /// The font of the placeholder text.
+  @objc public var placeholderFont: UIFont? {
+    didSet {
+      placeholderLabel.font = placeholderFont ?? textContainer.font
+    }
+  }
+
+  private lazy var placeholderLabel: UILabel = {
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.font = textContainer.font
+    label.numberOfLines = 0
+    label.lineBreakMode = .byWordWrapping
+    label.isAccessibilityElement = false
+    label.textColor = .gray
+    return label
+  }()
+
   private var controlState: UIControl.State {
     if isInErrorState {
       return .error
@@ -79,6 +112,9 @@ public final class M3CTextView: UIView, M3CTextInput {
     super.init(frame: .zero)
 
     configureStackViews()
+    addSubview(placeholderLabel)
+    configurePlaceholderConstraints()
+    updatePlaceholderVisibility()
     textContainer.setContentHuggingPriority(.defaultLow, for: .vertical)
     textContainer.setContentCompressionResistancePriority(.required, for: .vertical)
   }
@@ -153,6 +189,36 @@ public final class M3CTextView: UIView, M3CTextInput {
   override public func layoutSubviews() {
     super.layoutSubviews()
     hideEmptyLabels()
+  }
+
+  private func configurePlaceholderConstraints() {
+    NSLayoutConstraint.activate([
+      placeholderLabel.topAnchor.constraint(equalTo: textContainer.topAnchor, constant: 10),
+      placeholderLabel.leadingAnchor.constraint(equalTo: textContainer.leadingAnchor, constant: 12),
+      placeholderLabel.trailingAnchor.constraint(
+        equalTo: textContainer.trailingAnchor, constant: -12),
+      placeholderLabel.bottomAnchor.constraint(
+        lessThanOrEqualTo: textContainer.bottomAnchor,
+        constant: -textContainer.textContainerInset.bottom),
+    ])
+  }
+
+  private func updatePlaceholderVisibility() {
+    if let placeholderText = placeholder {
+      placeholderLabel.isHidden = !textContainer.text.isEmpty
+      textContainer.accessibilityHint = textContainer.text.isEmpty ? placeholderText : nil
+    } else {
+      placeholderLabel.isHidden = true
+      textContainer.accessibilityHint = nil
+    }
+  }
+
+  // MARK: - UITextViewDelegate
+
+  public func textViewDidChange(_ textView: UITextView) {
+    DispatchQueue.main.async { [weak self] in
+      self?.updatePlaceholderVisibility()
+    }
   }
 }
 
