@@ -105,6 +105,7 @@ static inline UIImage *TestImage(CGSize size) {
 
   // Then
   CGSize expectedMinimumSize = CGSizeMake(0, 32);
+  CGSize expectedImageViewSize = CGSizeZero;
   UIEdgeInsets expectedContentPadding = UIEdgeInsetsMake(4, 4, 4, 4);
   UIEdgeInsets expectedImagePadding = UIEdgeInsetsZero;
   UIEdgeInsets expectedAccessoryPadding = UIEdgeInsetsZero;
@@ -112,6 +113,9 @@ static inline UIImage *TestImage(CGSize size) {
   XCTAssertTrue(CGSizeEqualToSize(chip.minimumSize, expectedMinimumSize),
                 @"(%@) is not equal to (%@)", NSStringFromCGSize(chip.minimumSize),
                 NSStringFromCGSize(expectedMinimumSize));
+  XCTAssertTrue(CGSizeEqualToSize(chip.imageViewSize, expectedImageViewSize),
+                @"(%@) is not equal to (%@)", NSStringFromCGSize(chip.imageViewSize),
+                NSStringFromCGSize(expectedImageViewSize));
   XCTAssertFalse(chip.mdc_adjustsFontForContentSizeCategory);
   XCTAssertNotNil(chip.selectedImageView);
   XCTAssertNotNil(chip.titleLabel);

@@ -162,7 +162,16 @@ When @c centerVisibleArea is @c NO, this value is @c UIEdgeInsetsZero.
 @property(nonatomic, readonly) UIEdgeInsets visibleAreaInsets;
 
 /**
- A block that is invoked when the MDCChipView receives a call to @c
+ The size of the image of the Chip.
+
+ If this property is set to a size other than @c CGSizeZero, the chip will use this size for its
+ image. If this property is set to @c CGSizeZero, the chip will use the image's default size.
+
+ The default value is CGSizeZero.
+ */
+@property(nonatomic, assign) CGSize imageViewSize;
+
+/**
  traitCollectionDidChange:. The block is called after the call to the superclass.
  */
 @property(nonatomic, copy, nullable) void (^traitCollectionDidChangeBlock)

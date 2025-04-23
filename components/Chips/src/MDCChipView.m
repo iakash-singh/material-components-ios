@@ -169,6 +169,7 @@ static BOOL gEnablePerformantShadow = NO;
   _minimumSize = kMDCChipMinimumSizeDefault;
   self.isAccessibilityElement = YES;
   self.accessibilityTraits = UIAccessibilityTraitButton;
+  self.imageViewSize = CGSizeZero;
   _mdc_overrideBaseElevation = -1;
   _currentElevation = 0;
   if (gEnablePerformantShadow) {
@@ -958,7 +959,9 @@ static BOOL gEnablePerformantShadow = NO;
   CGRect contentRect = self.contentRect;
   CGRect frame = CGRectMake(CGRectGetMinX(contentRect), CGRectGetMidY(contentRect), 0, 0);
   if (visible) {
-    CGSize selectedSize = [self sizeForImageView:imageView maxSize:contentRect.size];
+    CGSize selectedSize = CGSizeEqualToSize(self.imageViewSize, CGSizeZero)
+                              ? [self sizeForImageView:imageView maxSize:contentRect.size]
+                              : self.imageViewSize;
     frame = MDCChipBuildFrame(_imagePadding, selectedSize,
                               CGPointMake(CGRectGetMinX(contentRect), CGRectGetMinY(contentRect)),
                               CGRectGetHeight(contentRect), self.pixelScale);
