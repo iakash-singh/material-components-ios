@@ -565,13 +565,26 @@ static const CGFloat kMinimumTouchTarget = 44.f;
 
 - (void)setCapsuleCornersBasedOn:(CGSize)size {
   if (self.isCapsuleShape) {
-    if (_buttonSizeSet) {
-      CGFloat height = MIN(size.height, _visualContentSize.height);
-      CGFloat width = MIN(size.width, _visualContentSize.width);
-      self.visualBackground.layer.cornerRadius = MIN(height, width) / 2;
-      self.visualBackground.layer.cornerCurve = kCACornerCurveCircular;
-      self.layer.cornerRadius = self.visualBackground.layer.cornerRadius;
-      self.layer.cornerCurve = self.visualBackground.layer.cornerCurve;
+    if (@available(iOS 15.0, *)) {
+      if (_buttonSizeSet) {
+        if (self.isHighlighted && _pressedCornerRadius[@(self.buttonSize)] != nil) {
+          self.visualBackground.layer.cornerRadius =
+              [_pressedCornerRadius[@(self.buttonSize)] floatValue];
+          self.visualBackground.layer.cornerCurve = kCACornerCurveCircular;
+          self.layer.cornerRadius = self.visualBackground.layer.cornerRadius;
+          self.layer.cornerCurve = self.visualBackground.layer.cornerCurve;
+        } else {
+          CGFloat height = MIN(size.height, _visualContentSize.height);
+          CGFloat width = MIN(size.width, _visualContentSize.width);
+          self.visualBackground.layer.cornerRadius = MIN(height, width) / 2;
+          self.visualBackground.layer.cornerCurve = kCACornerCurveCircular;
+          self.layer.cornerRadius = self.visualBackground.layer.cornerRadius;
+          self.layer.cornerCurve = self.visualBackground.layer.cornerCurve;
+        }
+      } else {
+        self.layer.cornerRadius = size.height / 2;
+        self.layer.cornerCurve = kCACornerCurveCircular;
+      }
     } else {
       self.layer.cornerRadius = size.height / 2;
       self.layer.cornerCurve = kCACornerCurveCircular;
