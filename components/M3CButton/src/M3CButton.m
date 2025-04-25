@@ -452,11 +452,18 @@ static const CGFloat kMinimumTouchTarget = 44.f;
 }
 
 - (void)setBorderWidth:(CGFloat)borderWidth {
-  self.visualBackground.layer.borderWidth = borderWidth;
+  if (_buttonSizeSet) {
+    self.visualBackground.layer.borderWidth = borderWidth;
+  } else {
+    self.layer.borderWidth = borderWidth;
+  }
 }
 
 - (CGFloat)borderWidth {
-  return self.visualBackground.layer.borderWidth;
+  if (_buttonSizeSet) {
+    return self.visualBackground.layer.borderWidth;
+  }
+  return self.layer.borderWidth;
 }
 
 - (void)setTextCanWrap:(BOOL)textCanWrap {
