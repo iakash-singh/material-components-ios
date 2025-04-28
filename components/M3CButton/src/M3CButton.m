@@ -547,6 +547,16 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   }
 }
 
+- (void)didMoveToSuperview {
+  [super didMoveToSuperview];
+
+  // If the image or title are set before the button is part of the heirarchy, then the visual
+  // background will be on top of the image or title.
+  if (_buttonSizeSet) {
+    [self sendSubviewToBack:self.visualBackground];
+  }
+}
+
 - (void)traitCollectionDidChange:(nullable UITraitCollection *)previousTraitCollection {
   [super traitCollectionDidChange:previousTraitCollection];
   [self updateCGColors];
