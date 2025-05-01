@@ -610,10 +610,13 @@ static const CGFloat kMinimumTouchTarget = 44.f;
 }
 
 - (CGSize)clampToMinimumSize:(CGSize)size {
-  if (size.height < _minimumHeight) {
-    size.height = _minimumHeight;
+  size.height = MAX(size.height, _minimumHeight);
+
+  if (_buttonSizeSet) {
+    size.width = MAX(size.width, _minimumWidth);
+  } else {
+    size.width = MAX(MAX(size.height, size.width), _minimumWidth);
   }
-  size.width = MAX(MAX(size.height, size.width), _minimumWidth);
   return size;
 }
 #pragma mark - Enabling multi-line layout
