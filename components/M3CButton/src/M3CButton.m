@@ -129,6 +129,7 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   [self updateCorners];
   [self updateFont];
   [self updateSymbolFont];
+  [self updateShadows];
 }
 
 // Colors
@@ -302,7 +303,17 @@ static const CGFloat kMinimumTouchTarget = 44.f;
                                         radius:shadow.radius
                                         offset:shadow.offset
                                         spread:shadow.spread] build];
-  MDCConfigureShadowForView(self, shadow);
+  if (_buttonSizeSet) {
+    MDCShadow *emptyShadow = [[MDCShadowBuilder builderWithColor:UIColor.clearColor
+                                                         opacity:0
+                                                          radius:0
+                                                          offset:CGSizeZero
+                                                          spread:0] build];
+    MDCConfigureShadowForView(self, emptyShadow);
+    MDCConfigureShadowForView(self.visualBackground, shadow);
+  } else {
+    MDCConfigureShadowForView(self, shadow);
+  }
 }
 
 - (void)setImageEdgeInsetsWithImageAndTitle:(UIEdgeInsets)imageEdgeInsetsWithImageAndTitle
