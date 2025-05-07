@@ -130,6 +130,7 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   [self updateFont];
   [self updateSymbolFont];
   [self updateShadows];
+  [self updateColors];
 }
 
 // Colors
