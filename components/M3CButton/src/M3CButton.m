@@ -9,6 +9,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Used to store the scaling curve and initial size of the @c imageView of a @c M3CButton. */
+@interface M3CIconAttributes : NSObject
+
+@property(nonatomic, copy, readonly) UIFontTextStyle textStyle;
+@property(nonatomic, assign, readonly) CGFloat pointSize;
+
+- (instancetype)initWithTextStyle:(UIFontTextStyle)textStyle pointSize:(CGFloat)pointSize;
+
+@end
+
+@implementation M3CIconAttributes
+
+- (instancetype)initWithTextStyle:(UIFontTextStyle)textStyle pointSize:(CGFloat)pointSize {
+  self = [super init];
+  if (self) {
+    _textStyle = [textStyle copy];  // Use copy for NSString properties
+    _pointSize = pointSize;
+  }
+  return self;
+}
+
+@end
+
 // Minimum touch size recommended by Apple:
 // https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility
 static const CGFloat kMinimumTouchTarget = 44.f;
@@ -19,7 +42,7 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   NSMutableDictionary<NSNumber *, UIColor *> *_borderColors;
   NSMutableDictionary<NSNumber *, MDCShadow *> *_shadows;
   NSMutableDictionary<NSNumber *, UIFont *> *_fonts;
-  NSMutableDictionary<NSNumber *, UIFont *> *_symbolFonts;
+  NSMutableDictionary<NSNumber *, M3CIconAttributes *> *_symbolFonts;
   NSMutableDictionary<NSNumber *, NSNumber *> *_cornerRadius;
   NSMutableDictionary<NSNumber *, NSNumber *> *_pressedCornerRadius;
   NSMutableDictionary<NSNumber *, NSValue *> *_imageEdgeInsetsForSize;
@@ -161,8 +184,11 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   [self updateFont];
 }
 
-- (void)setSymbolFont:(UIFont *)font forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
-  _symbolFonts[@(size)] = font;
+- (void)setSymbolSize:(CGFloat)symbolSize
+            textStyle:(UIFontTextStyle)textStyle
+              forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0)) {
+  _symbolFonts[@(size)] = [[M3CIconAttributes alloc] initWithTextStyle:textStyle
+                                                             pointSize:symbolSize];
 
   [self updateSymbolFont];
 }
@@ -264,14 +290,14 @@ static const CGFloat kMinimumTouchTarget = 44.f;
 }
 
 - (void)updateSymbolFont {
-  UIFont *currentFont = nil;
+  M3CIconAttributes *currentAttributes = nil;
 
   if (@available(iOS 15.0, *)) {
-    currentFont = _symbolFonts[@(self.buttonSize)];
-    if (_buttonSizeSet && !(currentFont == nil)) {
-      [self setPreferredSymbolConfiguration:[UIImageSymbolConfiguration
-                                                configurationWithFont:currentFont]
-                            forImageInState:UIControlStateNormal];
+    currentAttributes = _symbolFonts[@(self.buttonSize)];
+    if (_buttonSizeSet && currentAttributes != nil) {
+      CGFloat pointSize = [[UIFontMetrics metricsForTextStyle:currentAttributes.textStyle]
+          scaledValueForValue:currentAttributes.pointSize];
+      self.imageView.bounds = CGRectMake(0, 0, pointSize, pointSize);
     }
   }
 }
@@ -578,6 +604,7 @@ static const CGFloat kMinimumTouchTarget = 44.f;
   [super layoutSubviews];
   [self setCapsuleCornersBasedOn:self.frame.size];
   [self updateShadows];
+  [self updateSymbolFont];
 
   if (_buttonSizeSet) {
     if (_visualContentSize.width < kMinimumTouchTarget ||

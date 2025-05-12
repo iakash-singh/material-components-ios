@@ -76,10 +76,13 @@ and edge insets. This method is available in iOS 15.0 and later.
 
  @seealso @c setFont:forSize:
 
- @param symbolFont The font to be applied to the button.
+ @param symbolSize The initial size of the image.
+ @param textStyle The scaling curve applied to the image size to support dynamic type.
  @param size The size of the button.
  */
-- (void)setSymbolFont:(UIFont *)symbolFont forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
+- (void)setSymbolSize:(CGFloat)symbolSize
+            textStyle:(UIFontTextStyle)textStyle
+              forSize:(M3CButtonSize)size API_AVAILABLE(ios(15.0));
 
 /**
  Sets the corner radius for a particular size.
